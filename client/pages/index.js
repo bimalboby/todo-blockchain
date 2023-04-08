@@ -1,6 +1,10 @@
 import WrongNetworkMessage from '../components/WrongNetworkMessage'
 import ConnectWalletButton from '../components/ConnectWalletButton'
 import TodoList from '../components/TodoList'
+import TaskAbi from '../../Backend/build/contracts/TaskContract.json'
+import { TaskContractAdress } from '../config'
+import {ethers} from 'ethers'
+import { useState } from 'react'
 
 /* 
 const tasks = [
@@ -11,9 +15,43 @@ const tasks = [
 */
 
 export default function Home() {
+  const [correctNetwork, setcorrectNetwork] = useState(false)
+const [isUserLoggedIn, setisUserLoggedIn] = useState(false)
+const [currentAccount, setcurrentAccount] = useState(' ')
+const [input, setinput] = useState('  ')
+
 
   // Calls Metamask to connect wallet on clicking Connect Wallet button
   const connectWallet = async () => {
+
+    try {
+      const {ethereum}=window
+      if(!ethereum)
+      {
+        console.log("Metamask not found");
+        return
+      }
+      let chainId=await ethereum.request({method:'eth_chainId'})
+      console.log('Connected to chain',chainId);
+      const sepoliaChainId=11155111
+      if(chainId != sepoliaChainId)
+      { 
+        alert('not connected to sepolia...network')
+        setcorrectNetwork(false)
+        return
+      }else{
+        setcorrectNetwork(true)
+      }
+      const accounts=await ethereum.request({method:'eth_requestAccounts'})
+      console.log('found accounts',accounts);
+      setisUserLoggedIn(true)
+      setcurrentAccount(accounts[0])
+      console.log(currentAccount);
+      
+    } catch (error){
+      console.log(error);
+      
+    }
 
   }
 
@@ -24,6 +62,29 @@ export default function Home() {
 
   // Add tasks from front-end onto the blockchain
   const addTask = async e => {
+    e.preventDefault()
+    let task ={
+      taskText:input,
+      isDeleted:false,
+    }
+
+    try {
+      const {ethereum}=window
+      if(ethereum)
+      {
+        const provider=new ethereum.providers.Web3Provider(ethereum)
+        const signer=provider.gerSigner()
+        const TaskContract=new ethers.Contract(
+          TaskContractAdress,
+          TaskAbi.abi,
+          signer
+        )
+      }
+      
+    } catch (error) {
+      console.log(error);
+      
+    }
 
   }
 
@@ -34,7 +95,7 @@ export default function Home() {
 
   return (
     <div className='bg-[#97b5fe] h-screen w-screen flex justify-center py-6'>
-      {!'is user not logged in?' ? <ConnectWalletButton /> :
+      {'is user not logged in?' ? <ConnectWalletButton  connectWallet={connectWallet}/>:
         'is this the correct network?' ? <TodoList /> : <WrongNetworkMessage />}
     </div>
   )
