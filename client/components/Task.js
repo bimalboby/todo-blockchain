@@ -18,3 +18,4 @@ const Task = ({taskText,onClick}) => {
 }
 
 export default Task
+// Tested
