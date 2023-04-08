@@ -19,6 +19,7 @@ export default function Home() {
 const [isUserLoggedIn, setisUserLoggedIn] = useState(false)
 const [currentAccount, setcurrentAccount] = useState(' ')
 const [input, setinput] = useState('  ')
+const [tasks, settasks] = useState([])
 
 
   // Calls Metamask to connect wallet on clicking Connect Wallet button
@@ -79,6 +80,13 @@ const [input, setinput] = useState('  ')
           TaskAbi.abi,
           signer
         )
+        TaskContract.addTask(task.taskText,task.isDeleted).then(res=>{
+          settasks([...tasks,task])
+          console.log('Task added');
+
+        })
+      }else{
+        console.log("Ethereum obj not exist");
       }
       
     } catch (error) {
@@ -95,8 +103,8 @@ const [input, setinput] = useState('  ')
 
   return (
     <div className='bg-[#97b5fe] h-screen w-screen flex justify-center py-6'>
-      {'is user not logged in?' ? <ConnectWalletButton  connectWallet={connectWallet}/>:
-        'is this the correct network?' ? <TodoList /> : <WrongNetworkMessage />}
+      {!isUserLoggedIn ? <ConnectWalletButton  connectWallet={connectWallet}/>:
+        correctNetwork ? <TodoList /> : <WrongNetworkMessage />}
     </div>
   )
 }
