@@ -4,7 +4,7 @@ import TodoList from '../components/TodoList'
 import TaskAbi from '../../Backend/build/contracts/TaskContract.json'
 import { TaskContractAdress } from '../config'
 import {ethers} from 'ethers'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 /* 
 const tasks = [
@@ -20,6 +20,13 @@ const [isUserLoggedIn, setisUserLoggedIn] = useState(false)
 const [currentAccount, setcurrentAccount] = useState(' ')
 const [input, setinput] = useState('  ')
 const [tasks, settasks] = useState([])
+
+useEffect(() => {
+  connectWallet()
+  getAllTasks()
+  
+}, [])
+
 
 
   // Calls Metamask to connect wallet on clicking Connect Wallet button
@@ -58,6 +65,26 @@ const [tasks, settasks] = useState([])
 
   // Just gets all the tasks from the contract
   const getAllTasks = async () => {
+    try {
+      const {ethereum}=window
+      if(ethereum)
+      {
+        const provider=new ethers.providers.Web3Provider(ethereum)
+        const signer=provider.getSigner()
+        const TaskContract=new ethers.Contract(
+          TaskContractAdress,
+          TaskAbi.abi,
+          signer
+        )
+        let allTask=await TaskContract.getMyTasks()
+        settasks(allTask)
+      }
+
+      
+    } catch (error) {
+      console.log(error);
+      
+    }
 
   }
 
@@ -73,8 +100,8 @@ const [tasks, settasks] = useState([])
       const {ethereum}=window
       if(ethereum)
       {
-        const provider=new ethereum.providers.Web3Provider(ethereum)
-        const signer=provider.gerSigner()
+        const provider=new ethers.providers.Web3Provider(ethereum)
+        const signer=provider.getSigner()
         const TaskContract=new ethers.Contract(
           TaskContractAdress,
           TaskAbi.abi,
@@ -93,18 +120,43 @@ const [tasks, settasks] = useState([])
       console.log(error);
       
     }
+    setinput('')
 
   }
 
   // Remove tasks from front-end by filtering it out on our "back-end" / blockchain smart contract
   const deleteTask = key => async () => {
+    try {
+      const {ethereum}=window
+      if(ethereum)
+      {
+        const provider=new ethers.providers.Web3Provider(ethereum)
+        const signer=provider.getSigner()
+        const TaskContract=new ethers.Contract(
+          TaskContractAdress,
+          TaskAbi.abi,
+          signer
+        )
+       const deleteTaskTx= await TaskContract.deleteTask(key,true)
+        console.log("Deleted successfully"); 
+        let allTasks=await TaskContract.getMyTasks()
+        settasks(allTasks)
+      }
+      else{
+        console.log("not exist");
+      }
+      
+    } catch (error) {
+      console.log(error);
+      
+    }
 
   }
 
   return (
     <div className='bg-[#97b5fe] h-screen w-screen flex justify-center py-6'>
       {!isUserLoggedIn ? <ConnectWalletButton  connectWallet={connectWallet}/>:
-        correctNetwork ? <TodoList /> : <WrongNetworkMessage />}
+        correctNetwork ? <TodoList tasks={tasks} nput={input} setinput={setinput} addTask={addTask} deleteTask={deleteTask}/> : <WrongNetworkMessage />}
     </div>
   )
 }
